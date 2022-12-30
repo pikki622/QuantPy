@@ -34,12 +34,13 @@ def mangle_docstrings(app, what, name, obj, options, lines,
     if app.config.numpydoc_edit_link and hasattr(obj, '__name__') and \
            obj.__name__:
         if hasattr(obj, '__module__'):
-            v = dict(full_name="%s.%s" % (obj.__module__, obj.__name__))
+            v = dict(full_name=f"{obj.__module__}.{obj.__name__}")
         else:
             v = dict(full_name=obj.__name__)
         lines += ['', '.. htmlonly::', '']
-        lines += ['    %s' % x for x in
-                  (app.config.numpydoc_edit_link % v).split("\n")]
+        lines += [
+            f'    {x}' for x in (app.config.numpydoc_edit_link % v).split("\n")
+        ]
 
     # replace reference numbers so that there are no duplicates
     references = []
@@ -110,7 +111,4 @@ def monkeypatch_sphinx_ext_autodoc():
 
 def our_format_signature(what, obj):
     r = mangle_signature(None, what, None, obj, None, None, None)
-    if r is not None:
-        return r[0]
-    else:
-        return _original_format_signature(what, obj)
+    return r[0] if r is not None else _original_format_signature(what, obj)

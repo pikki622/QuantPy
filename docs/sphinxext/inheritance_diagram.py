@@ -88,7 +88,8 @@ class InheritanceGraph(object):
             path, base = self.py_sig_re.match(name).groups()
         except:
             raise ValueError(
-                "Invalid class or module '%s' specified for inheritance diagram" % name)
+                f"Invalid class or module '{name}' specified for inheritance diagram"
+            )
         fullname = (path or '') + base
         path = (path and path.rstrip('.'))
         if not path:
@@ -101,10 +102,11 @@ class InheritanceGraph(object):
             # second call will force the equivalent of 'import a.b' to happen
             # after the top-level import above.
             my_import(fullname)
-            
+
         except ImportError:
             raise ValueError(
-                "Could not import class or module '%s' specified for inheritance diagram" % name)
+                f"Could not import class or module '{name}' specified for inheritance diagram"
+            )
 
         try:
             todoc = module
@@ -112,19 +114,19 @@ class InheritanceGraph(object):
                 todoc = getattr(todoc, comp)
         except AttributeError:
             raise ValueError(
-                "Could not find class or module '%s' specified for inheritance diagram" % name)
+                f"Could not find class or module '{name}' specified for inheritance diagram"
+            )
 
         # If a class, just return it
         if inspect.isclass(todoc):
             return [todoc]
         elif inspect.ismodule(todoc):
-            classes = []
-            for cls in todoc.__dict__.values():
-                if inspect.isclass(cls) and cls.__module__ == todoc.__name__:
-                    classes.append(cls)
-            return classes
-        raise ValueError(
-            "'%s' does not resolve to a class or module" % name)
+            return [
+                cls
+                for cls in todoc.__dict__.values()
+                if inspect.isclass(cls) and cls.__module__ == todoc.__name__
+            ]
+        raise ValueError(f"'{name}' does not resolve to a class or module")
 
     def _import_classes(self, class_names):
         """
@@ -162,7 +164,7 @@ class InheritanceGraph(object):
         if module == '__builtin__':
             fullname = cls.__name__
         else:
-            fullname = "%s.%s" % (module, cls.__name__)
+            fullname = f"{module}.{cls.__name__}"
         if parts == 0:
             return fullname
         name_parts = fullname.split('.')
@@ -233,7 +235,7 @@ class InheritanceGraph(object):
             this_node_options = n_options.copy()
             url = urls.get(self.class_name(cls))
             if url is not None:
-                this_node_options['URL'] = '"%s"' % url
+                this_node_options['URL'] = f'"{url}"'
             fd.write('  "%s" [%s];\n' %
                      (name, self._format_node_options(this_node_options)))
 
@@ -308,8 +310,7 @@ def inheritance_diagram_directive(name, arguments, options, content, lineno,
     # references to real URLs later.  These nodes will eventually be
     # removed from the doctree after we're done with them.
     for name in graph.get_all_class_names():
-        refnodes, x = xfileref_role(
-            'class', ':class:`%s`' % name, name, 0, state)
+        refnodes, x = xfileref_role('class', f':class:`{name}`', name, 0, state)
         node.extend(refnodes)
     # Store the graph object so we can use it to generate the
     # dot file later
@@ -331,12 +332,12 @@ def html_output_graph(self, node):
     parts = node['parts']
 
     graph_hash = get_graph_hash(node)
-    name = "inheritance%s" % graph_hash
+    name = f"inheritance{graph_hash}"
     path = '_images'
     dest_path = os.path.join(setup.app.builder.outdir, path)
     if not os.path.exists(dest_path):
         os.makedirs(dest_path)
-    png_path = os.path.join(dest_path, name + ".png")
+    png_path = os.path.join(dest_path, f"{name}.png")
     path = setup.app.builder.imgpath
 
     # Create a mapping from fully-qualified class names to URLs.
@@ -349,10 +350,10 @@ def html_output_graph(self, node):
 
     # These arguments to dot will save a PNG file to disk and write
     # an HTML image map to stdout.
-    image_map = graph.run_dot(['-Tpng', '-o%s' % png_path, '-Tcmapx'],
-                              name, parts, urls)
-    return ('<img src="%s/%s.png" usemap="#%s" class="inheritance"/>%s' %
-            (path, name, name, image_map))
+    image_map = graph.run_dot(
+        ['-Tpng', f'-o{png_path}', '-Tcmapx'], name, parts, urls
+    )
+    return f'<img src="{path}/{name}.png" usemap="#{name}" class="inheritance"/>{image_map}'
 
 def latex_output_graph(self, node):
     """
@@ -362,14 +363,18 @@ def latex_output_graph(self, node):
     parts = node['parts']
 
     graph_hash = get_graph_hash(node)
-    name = "inheritance%s" % graph_hash
+    name = f"inheritance{graph_hash}"
     dest_path = os.path.abspath(os.path.join(setup.app.builder.outdir, '_images'))
     if not os.path.exists(dest_path):
         os.makedirs(dest_path)
-    pdf_path = os.path.abspath(os.path.join(dest_path, name + ".pdf"))
+    pdf_path = os.path.abspath(os.path.join(dest_path, f"{name}.pdf"))
 
-    graph.run_dot(['-Tpdf', '-o%s' % pdf_path],
-                  name, parts, graph_options={'size': '"6.0,6.0"'})
+    graph.run_dot(
+        ['-Tpdf', f'-o{pdf_path}'],
+        name,
+        parts,
+        graph_options={'size': '"6.0,6.0"'},
+    )
     return '\n\\includegraphics{%s}\n\n' % pdf_path
 
 def visit_inheritance_diagram(inner_func):

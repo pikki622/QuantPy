@@ -7,10 +7,11 @@ from numpy import array, arange
 
 
 def event_profiler(asset, truth, periods=5):
-    cut = []
-    for i in range(periods, len(asset) - periods):
-        if truth[i] == 1 and asset[i] > 0:
-            cut.append(asset[i - periods:i + periods] / asset[i])
+    cut = [
+        asset[i - periods : i + periods] / asset[i]
+        for i in range(periods, len(asset) - periods)
+        if truth[i] == 1 and asset[i] > 0
+    ]
     return array(cut)
 
 

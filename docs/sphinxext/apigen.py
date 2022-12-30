@@ -143,7 +143,7 @@ class ApiDocWriter(object):
         path = path.replace(self.package_name + os.path.sep, '')
         path = os.path.join(self.root_path, path)
         # XXX maybe check for extensions as well?
-        if os.path.exists(path + '.py'): # file
+        if os.path.exists(f'{path}.py'): # file
             path += '.py'
         elif os.path.exists(os.path.join(path, '__init__.py')):
             path = os.path.join(path, '__init__.py')
@@ -164,9 +164,8 @@ class ApiDocWriter(object):
         if filename is None:
             # nothing that we could handle here.
             return ([],[])
-        f = open(filename, 'rt')
-        functions, classes = self._parse_lines(f)
-        f.close()
+        with open(filename, 'rt') as f:
+            functions, classes = self._parse_lines(f)
         return functions, classes
     
     def _parse_lines(self, linesource):
@@ -184,8 +183,6 @@ class ApiDocWriter(object):
                 name = self._get_object_name(line)
                 if not name.startswith('_'):
                     classes.append(name)
-            else:
-                pass
         functions.sort()
         classes.sort()
         return functions, classes
@@ -291,8 +288,7 @@ class ApiDocWriter(object):
         elif match_type == 'package':
             patterns = self.package_skip_patterns
         else:
-            raise ValueError('Cannot interpret match type "%s"' 
-                             % match_type)
+            raise ValueError(f'Cannot interpret match type "{match_type}"')
         # Match to URI without package name
         L = len(self.package_name)
         if matchstr[:L] == self.package_name:
@@ -362,9 +358,8 @@ class ApiDocWriter(object):
             # write out to file
             outfile = os.path.join(outdir,
                                    m + self.rst_extension)
-            fileobj = open(outfile, 'wt')
-            fileobj.write(api_str)
-            fileobj.close()
+            with open(outfile, 'wt') as fileobj:
+                fileobj.write(api_str)
             written_modules.append(m)
         self.written_modules = written_modules
 
@@ -418,10 +413,9 @@ class ApiDocWriter(object):
             relpath = outdir.replace(relative_to + os.path.sep, '')
         else:
             relpath = outdir
-        idx = open(path,'wt')
-        w = idx.write
-        w('.. AUTO-GENERATED FILE -- DO NOT EDIT!\n\n')
-        w('.. toctree::\n\n')
-        for f in self.written_modules:
-            w('   %s\n' % os.path.join(relpath,f))
-        idx.close()
+        with open(path,'wt') as idx:
+            w = idx.write
+            w('.. AUTO-GENERATED FILE -- DO NOT EDIT!\n\n')
+            w('.. toctree::\n\n')
+            for f in self.written_modules:
+                w('   %s\n' % os.path.join(relpath,f))

@@ -23,7 +23,7 @@ class Portfolio:
                 self.asset[symbol] = DataReader(
                     symbol, "yahoo", start=start, end=end)
             except:
-                print("Asset " + str(symbol) + " not found!")
+                print(f"Asset {str(symbol)} not found!")
 
         # Get Benchmark asset.
         self.benchmark = DataReader(bench, "yahoo", start=start, end=end)
@@ -33,19 +33,19 @@ class Portfolio:
         for symbol in symbols:
             # Get returns.
             self.asset[symbol]['Return'] = \
-                self.asset[symbol]['Adj Close'].diff()
+                    self.asset[symbol]['Adj Close'].diff()
             # Get Beta.
             A = self.asset[symbol]['Return'].fillna(0)
             B = self.benchmark['Return'].fillna(0)
             self.asset[symbol]['Beta'] = cov(A, B)[0, 1] / cov(A, B)[1, 1]
             # Get Alpha
             self.asset[symbol]['Alpha'] = self.asset[symbol]['Return'] - \
-                self.asset[symbol]['Beta'] * self.benchmark['Return']
+                    self.asset[symbol]['Beta'] * self.benchmark['Return']
 
             # Get Sharpe Ratio
             tmp = self.asset[symbol]['Return']
             self.asset[symbol]['Sharpe'] = \
-                sqrt(len(tmp)) * mean(tmp.fillna(0)) / std(tmp.fillna(0))
+                    sqrt(len(tmp)) * mean(tmp.fillna(0)) / std(tmp.fillna(0))
 
     def nplot(self, symbol, color='b', nval=0):
         tmp = (self.benchmark if symbol == 'bench' else self.asset[symbol]) ['Adj Close'] 
@@ -98,15 +98,13 @@ class Portfolio:
     def efficient_frontier(self, xi=0.01, xf=4, npts=100, scale=10):
         frontier = linspace(xi, xf, npts)
 
-        i = 0
         rets = zeros(len(frontier))
         sharpe = zeros(len(frontier))
-        for f in frontier:
+        for i, f in enumerate(frontier):
             w = self.efficient_frontier_w(f)
             tmp = self.ret_for_w(w)
             rets[i] = tmp.sum() * scale
             sharpe[i] = mean(tmp) / std(tmp) * sqrt(len(tmp))
-            i += 1
         risk = rets/sharpe
         return Series(rets, index=risk), sharpe.max()
 

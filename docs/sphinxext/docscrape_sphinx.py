@@ -4,23 +4,16 @@ from docscrape import NumpyDocString, FunctionDoc, ClassDoc
 class SphinxDocString(NumpyDocString):
     # string conversion routines
     def _str_header(self, name, symbol='`'):
-        return ['.. rubric:: ' + name, '']
+        return [f'.. rubric:: {name}', '']
 
     def _str_field_list(self, name):
-        return [':' + name + ':']
+        return [f':{name}:']
 
     def _str_indent(self, doc, indent=4):
-        out = []
-        for line in doc:
-            out += [' '*indent + line]
-        return out
+        return [' '*indent + line for line in doc]
 
     def _str_signature(self):
         return ['']
-        if self['Signature']:
-            return ['``%s``' % self['Signature']] + ['']
-        else:
-            return ['']
 
     def _str_summary(self):
         return self['Summary'] + ['']
@@ -34,8 +27,7 @@ class SphinxDocString(NumpyDocString):
             out += self._str_field_list(name)
             out += ['']
             for param,param_type,desc in self[name]:
-                out += self._str_indent(['**%s** : %s' % (param.strip(),
-                                                          param_type)])
+                out += self._str_indent([f'**{param.strip()}** : {param_type}'])
                 out += ['']
                 out += self._str_indent(desc,8)
                 out += ['']
@@ -72,14 +64,14 @@ class SphinxDocString(NumpyDocString):
         if len(idx) == 0:
             return out
 
-        out += ['.. index:: %s' % idx.get('default','')]
+        out += [f".. index:: {idx.get('default', '')}"]
         for section, references in idx.iteritems():
             if section == 'default':
                 continue
             elif section == 'refguide':
-                out += ['   single: %s' % (', '.join(references))]
+                out += [f"   single: {', '.join(references)}"]
             else:
-                out += ['   %s: %s' % (section, ','.join(references))]
+                out += [f"   {section}: {','.join(references)}"]
         return out
 
     def _str_references(self):

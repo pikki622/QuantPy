@@ -20,13 +20,13 @@ def fetch_news(tickers, kind='company'):
     if not tickers:
         return None
 
-    if not kind in ('company', 'industry'):
+    if kind not in ('company', 'industry'):
         raise ValueError("'kind' must be one of 'company' or 'industry'.")
 
     if kind == 'company':
-        url = 'http://finance.yahoo.com/rss/headline?s=%s' % tickers
+        url = f'http://finance.yahoo.com/rss/headline?s={tickers}'
     else:
-        url = 'http://finance.yahoo.com/rss/industry?s=%s' % tickers
+        url = f'http://finance.yahoo.com/rss/industry?s={tickers}'
 
     feed = urllib.request.urlopen(url)
 
@@ -66,18 +66,21 @@ def get_market_updates(symbols, special_tags):
         sym_list = str.join('+', symbols)
 
     # Symbol must be in the special_tags for now
-    if not 's' in special_tags:
+    if 's' not in special_tags:
         special_tags.insert(0, 's')
     request = ''.join(special_tags)  # code request string
     special_tag_names = [settings.YAHOO_SYMBOL_TAGS[x] for x in special_tags]
     header = special_tag_names
 
-    data = dict(list(zip(
-        list(special_tag_names), [[] for i in range(len(special_tags))]
-    )))
+    data = dict(
+        list(
+            zip(
+                list(special_tag_names), [[] for _ in range(len(special_tags))]
+            )
+        )
+    )
 
-    urlStr = 'http://finance.yahoo.com/d/quotes.csv?s=%s&f=%s' % (
-        sym_list, request)
+    urlStr = f'http://finance.yahoo.com/d/quotes.csv?s={sym_list}&f={request}'
 
     try:
         lines = urllib.request.urlopen(urlStr).readlines()
@@ -108,6 +111,6 @@ def get_dashboard_index_updates():
     """Fetch updates for assets in the settings.DASHBOARD_INDEXES
     Return a pandas data frame.
     """
-    symbols = [x for x in settings.DASHBOARD_INDEXES.keys()]
+    symbols = list(settings.DASHBOARD_INDEXES.keys())
     special_tags = ['s', 'c6', 'd1', 'l1', 'p2']  # settings.YAHOO_SYMBOL_TAGS
     return get_market_updates(symbols, special_tags)

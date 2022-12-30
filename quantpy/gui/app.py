@@ -92,8 +92,7 @@ class Handler:
 
 def main():
     app = App()
-    status = app.run(sys.argv)
-    return status
+    return app.run(sys.argv)
 
 
 if __name__ == "__main__":
